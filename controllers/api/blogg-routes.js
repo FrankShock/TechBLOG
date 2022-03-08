@@ -1,23 +1,24 @@
 const router = require('express').Router();
-const sequelize = require('../../Conf/connection');
-const { Post, User, Comment, Vote } = require('../../models');
+const { Post, User, Comment } = require('../../models');
 const withAuth = require('../../utils/auth');
 
 // get all users
 router.get('/', (req, res) => {
   console.log('======================');
-  Blog.findAll({
+  Post.findAll({
     attributes: [
       'id',
       'title',
-      'blog_content',
+      'content',
       'created_at',
-      [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE blog.id = vote.blog_id)'), 'vote_count']
+    ],
+    order:[
+      ["DESC", "created_at"]
     ],
     include: [
       {
         model: Comment,
-        attributes: ['id', 'comment_text', 'blog_id', 'user_id', 'created_at'],
+        attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
         include: {
           model: User,
           attributes: ['username']
@@ -29,7 +30,7 @@ router.get('/', (req, res) => {
       }
     ]
   })
-    .then(BlogdbData => res.json(BlogdbData))
+    .then(dbPostData => res.json(dbPostData))
     .catch(err => {
       console.log(err);
       res.status(500).json(err);
@@ -37,21 +38,20 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', (req, res) => {
-  Blog.findOne({
+  Post.findOne({
     where: {
       id: req.params.id
     },
     attributes: [
       'id',
       'title',
-      'blog_content',
+      'content',
       'created_at',
-      [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE blog.id = vote.blog_id)'), 'vote_count']
   ],
     include: [
       {
         model: Comment,
-        attributes: ['id', 'comment_text', 'blog_id', 'user_id', 'created_at'],
+        attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
         include: {
           model: User,
           attributes: ['username']
@@ -63,12 +63,12 @@ router.get('/:id', (req, res) => {
       }
     ]
   })
-    .then(BlogdbData => {
-      if (!BlogdbData) {
+    .then(dbPostData => {
+      if (!dbPostData) {
         res.status(404).json({ message: 'No blog found with this id' });
         return;
       }
-      res.json(BlogdbData);
+      res.json(dbPostData);
     })
     .catch(err => {
       console.log(err);
@@ -78,22 +78,12 @@ router.get('/:id', (req, res) => {
 
 router.post('/', withAuth, (req, res) => {
   // expects {title: 'Taskmaster goes public!', blog_content: 'https://taskmaster.com/press', user_id: 1}
-  Blog.create({
+  Post.create({
     title: req.body.title,
-    blog_content: req.body.blog_content,
+    content: req.body.post_content,
     user_id: req.session.user_id
   })
-    .then(BlogdbData => res.json(BlogdbData))
-    .catch(err => {
-      console.log(err);
-      res.status(500).json(err);
-    });
-});
-
-router.put('/upvote', withAuth, (req, res) => {
-  // custom static method created in models/Post.js
-  Blog.upvote({ ...req.body, user_id: req.session.user_id }, { Vote, Comment, User })
-    .then(updatedVoteData => res.json(updatedVoteData))
+    .then(dbPostData => res.json(dbPostData))
     .catch(err => {
       console.log(err);
       res.status(500).json(err);
@@ -101,7 +91,7 @@ router.put('/upvote', withAuth, (req, res) => {
 });
 
 router.put('/:id', withAuth, (req, res) => {
-  Blog.update(
+  Post.update(
     {
       title: req.body.title
     },
@@ -111,32 +101,34 @@ router.put('/:id', withAuth, (req, res) => {
       }
     }
   )
-    .then(BlogdbData => {
-      if (!BlogdbData) {
-        res.status(404).json({ message: 'No blog found with this id' });
+  .then((dbPostData) => {
+    if (!dbPostData) {
+        res.status(404).json({
+            message: "No Blog found with this id"
+        });
         return;
-      }
-      res.json(BlogdbData);
-    })
-    .catch(err => {
-      console.log(err);
-      res.status(500).json(err);
-    });
+    }
+    res.json(dbPostData);
+})
+.catch((err) => {
+    console.log(err);
+    res.status(500).json(err);
+});
 });
 
 router.delete('/:id', withAuth, (req, res) => {
   console.log('id', req.params.id);
-  Blog.destroy({
+  Post.destroy({
     where: {
       id: req.params.id
     }
   })
-    .then(BlogdbData => {
-      if (!BlogdbData) {
+    .then(dbPostData => {
+      if (!dbPostData) {
         res.status(404).json({ message: 'No blog found with this id' });
         return;
       }
-      res.json(BlogdbData);
+      res.json(dbPostData);
     })
     .catch(err => {
       console.log(err);

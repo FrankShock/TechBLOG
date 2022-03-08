@@ -16,7 +16,7 @@ Blog.belongsTo(User, {
 
 User.belongsToMany(Blog, {
     through: Vote,
-    as: 'voted_blogs',
+    as: 'voted_posts',
 
     foreignKey: 'user_id',
     onDelete: 'SET NULL'
@@ -24,8 +24,8 @@ User.belongsToMany(Blog, {
 
 Blog.belongsToMany(User, {
     through: Vote,
-    as: 'voted_blogs',
-    foreignKey: 'blog_id',
+    as: 'voted_posts',
+    foreignKey: 'post_id',
     onDelete: 'SET NULL'
 });
 
@@ -35,7 +35,7 @@ Vote.belongsTo(User, {
 });
 
 Vote.belongsTo(Blog, {
-    foreignKey: 'blog_id',
+    foreignKey: 'post_id',
     onDelete: 'SET NULL'
 });
 
@@ -44,7 +44,7 @@ User.hasMany(Vote, {
 });
 
 Blog.hasMany(Vote, {
-    foreignKey: 'blog_id'
+    foreignKey: 'post_id'
 });
 
 Comment.belongsTo(User, {
@@ -53,7 +53,7 @@ Comment.belongsTo(User, {
 });
 
 Comment.belongsTo(Blog, {
-    foreignKey: 'blog_id',
+    foreignKey: 'post_id',
     onDelete: 'SET NULL'
 });
 
@@ -63,7 +63,7 @@ User.hasMany(Comment, {
 });
 
 Blog.hasMany(Comment, {
-    foreignKey: 'blog_id'
+    foreignKey: 'post_id'
 });
 
 module.exports = { User, Blog, Vote, Comment };

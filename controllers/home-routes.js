@@ -5,18 +5,18 @@ const { Post, User, Comment, Vote } = require('../models');
 // get all posts for homepage
 router.get('/', (req, res) => {
   console.log('======================');
-  Blog.findAll({
+  Post.findAll({
       attributes: [
           'id',
           'title',
-          'blog_content',
+          'content',
           'created_at',
-          [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE blog.id = vote.blog_id)'), 'vote_count']
-      ],
-      include: [
+        ],
+      include: 
+      [
           {
               model: Comment,
-              attributes: ['id', 'comment_text', 'blog_id', 'user_id', 'created_at'],
+              attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
               include: {
                   model: User,
                   attributes: ['username']
@@ -28,11 +28,11 @@ router.get('/', (req, res) => {
           }
       ]
   })
-      .then(dbBlogData => {
-          const blogs = dbBlogData.map(blog => blog.get({ plain: true }));
+      .then(dbPostData => {
+          const posts = dbPostData.map(post => post.get({ plain: true }));
 
           res.render('homepage', {
-              blogs,
+             posts,
               loggedIn: req.session.loggedIn
           });
       })
@@ -42,23 +42,20 @@ router.get('/', (req, res) => {
       });
 });
 
-// get single blog
-router.get('/blog/:id', (req, res) => {
-  Blog.findOne({
-      where: {
-          id: req.params.id
-      },
+// get single post
+router.get('/post/:id', (req, res) => {
+ Post.findOne({
+      where: {id: req.params.id},
       attributes: [
           'id',
           'title',
-          'blog_content',
+          'post_content',
           'created_at',
-          [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE blog.id = vote.blog_id)'), 'vote_count']
       ],
       include: [
           {
               model: Comment,
-              attributes: ['id', 'comment_text', 'blog_id', 'user_id', 'created_at'],
+              attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
               include: {
                   model: User,
                   attributes: ['username']
@@ -70,16 +67,16 @@ router.get('/blog/:id', (req, res) => {
           }
       ]
   })
-      .then(dbBlogData => {
-          if (!dbBlogData) {
-              res.status(404).json({ message: 'No blog found with this id' });
+      .then(dbPostData => {
+          if (!dbPostData) {
+              res.status(404).json({ message: 'No Blog found with this id' });
               return;
           }
 
-          const blog = dbBlogData.get({ plain: true });
+          const post = dbPostData.get({ plain: true });
 
-          res.render('single-blog', {
-              blog,
+          res.render('single-post', {
+              post,
               loggedIn: req.session.loggedIn
           });
       })
